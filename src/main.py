@@ -1,9 +1,19 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 
-model = mujoco.MjModel.from_xml_path(
-    "/home/phuryn/projects/LM-Based-Robotic-Maanipulator-Control/models/universal_robots_ur5e/scene.xml"
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+# Путь к XML относительно корня проекта
+MODEL_PATH = (
+    PROJECT_DIR
+    / "models"
+    / "universal_robots_ur5e"
+    / "scene.xml"
 )
+
+model = mujoco.MjModel.from_xml_path(str(MODEL_PATH))
 data = mujoco.MjData(model)
 
 print("Joints:", model.njnt)
