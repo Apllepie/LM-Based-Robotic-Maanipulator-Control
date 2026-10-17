@@ -28,21 +28,18 @@ class Trajectory:
         return length
 
 
-class CircleTrajectory(Trajectory):
-    def __init__(self, center:float, radius:float, duration:float):
-        """waypoints in meters, duration in seconds
-        duration is the time it takes to complete one full circle"""
 
+class CircleTrajectory(Trajectory):
+    def __init__(self, center: list | np.ndarray, radius: float, duration: float):
+        """center in meters [x, y, z], radius in meters, duration in seconds."""
         self.center = np.array(center)
         self.radius = radius
         self.duration = duration
 
-
-    def generate_circle_waypoints(self, t):
-        angles = (2 * np.pi / self.duration) * t
-        waypoints = []
-        x = self.center[0] + self.radius * np.cos(angles)
-        y = self.center[1] + self.radius * np.sin(angles)
+    def generate_circle_waypoints(self, t: float) -> np.ndarray:
+        angle = (2 * np.pi / self.duration) * t
+        x = self.center[0] + self.radius * np.cos(angle)
+        y = self.center[1] + self.radius * np.sin(angle)
         z = self.center[2]
 
-        return np.array([x, y, z]).T  # Transpose to get shape (N, 3)
+        return np.array([x, y, z])
