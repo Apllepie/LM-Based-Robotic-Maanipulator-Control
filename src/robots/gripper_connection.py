@@ -25,3 +25,11 @@ def create_robot(robot_path, gripper_path):
     print("Gripper actuator ID:", gripper_id)
 
     return model, data
+
+def get_gripper_actuator_id(model):
+    gripper_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_ACTUATOR,
+        "gripper_fingers_actuator",
+    )
+    return gripper_id
