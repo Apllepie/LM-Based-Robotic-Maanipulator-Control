@@ -24,15 +24,15 @@ data.ctrl[:6] = q_home
 mujoco.mj_forward(model, data)
 
 # 3. Przygotowanie trajektorii okręgu
-ee_body_name = "wrist_3_link"
-start_pos = data.body(ee_body_name).xpos.copy()
+ee_body_name = "gripper_pinch"
+start_pos = data.site(ee_body_name).xpos.copy()
 radius = 0.1
 circle_center = start_pos - np.array([radius, 0.0, 0.0])
 
 circle_trajectory = CircleTrajectory(center=circle_center, radius=radius, duration=5.0)
 
 # 4. Inicjalizacja modułu kinematyki i zmiennych sterujących
-ik_solver = DifferentialIK(model, data, body_name=ee_body_name, damping=1e-2)
+ik_solver = DifferentialIK(model, data, site_name=ee_body_name, damping=1e-2)
 q_target = q_home.copy()
 
 # 5. Pętla symulacji
@@ -42,7 +42,7 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
 
         # Odczyt pozycji z trajektorii i z symulatora
         target_pos = circle_trajectory.generate_circle_waypoints(t)
-        current_pos = data.body(ee_body_name).xpos
+        current_pos = data.site(ee_body_name).xpos
 
         # Obliczenie wymaganych prędkości przegubów przez zewnętrzny moduł
         dq = ik_solver.compute_joint_velocities(
