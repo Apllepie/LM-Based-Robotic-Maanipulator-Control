@@ -1,0 +1,58 @@
+[
+  {
+    "role": "user",
+    "content": "lubie jabłka"
+  },
+  {
+    "role": "assistant",
+    "content": "Zgodnie z Twoją preferencją."
+  },
+  {
+    "role": "user",
+    "content": "nie lubie kukurdzy"
+  },
+  {
+    "role": "assistant",
+    "content": "Zgodne z Twoją preferencją."
+  },
+  {
+    "role": "user",
+    "content": "masz 3 klocki, zilony niebieski czerwony"
+  },
+  {
+    "role": "assistant",
+    "content": "Na stole znajdują się: zielony klocek, niebieski klocek i czerwony klocek."
+  },
+  {
+    "role": "user",
+    "content": "co lubie?"
+  },
+  {
+    "role": "assistant",
+    "content": "Lubisz jabłka."
+  },
+  {
+    "role": "user",
+    "content": "co nie lubie"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie lubisz kukurydzy."
+  },
+  {
+    "role": "user",
+    "content": "ile masz klocków"
+  },
+  {
+    "role": "assistant",
+    "content": "Mam 3 klocki."
+  },
+  {
+    "role": "user",
+    "content": "jakich kolorów"
+  },
+  {
+    "role": "assistant",
+    "content": "Klocki są czerwone, niebieskie i zielone."
+  }
+]
