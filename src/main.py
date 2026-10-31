@@ -1,18 +1,21 @@
 from pathlib import Path
 import time
+import threading
 import numpy as np
+import zmq
 
 import mujoco
 import mujoco.viewer
 
 import robots.gripper_connection as gripper_connection
-from trajectory import CircleTrajectory
-from kinematics import DifferentialIK
 
+# Scieżki do modeli
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-
 ROBOT_PATH = PROJECT_DIR / "models" / "universal_robots_ur5e" / "scene.xml"
 GRIPPER_PATH = PROJECT_DIR / "models" / "robotiq_2f85" / "2f85.xml"
+
+# Adres komunikacji IPC przez ZeroMQ
+ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
 
 # 1. Tworzenie modelu i danych robota
 model, data = gripper_connection.create_robot(ROBOT_PATH, GRIPPER_PATH)
@@ -23,43 +26,56 @@ data.qpos[:6] = q_home
 data.ctrl[:6] = q_home
 mujoco.mj_forward(model, data)
 
-# 3. Przygotowanie trajektorii okręgu
-ee_body_name = "gripper_pinch"
-start_pos = data.site(ee_body_name).xpos.copy()
-radius = 0.1
-circle_center = start_pos - np.array([radius, 0.0, 0.0])
-
-circle_trajectory = CircleTrajectory(center=circle_center, radius=radius, duration=5.0)
-
-# 4. Inicjalizacja modułu kinematyki i zmiennych sterujących
-ik_solver = DifferentialIK(model, data, site_name=ee_body_name, damping=1e-2)
+# Bufor pozycji docelowej i blokada wątkowa
 q_target = q_home.copy()
+q_lock = threading.Lock()
 
-# 5. Pętla symulacji
-with mujoco.viewer.launch_passive(model, data) as viewer:
-    while viewer.is_running():
-        t = data.time
 
-        # Odczyt pozycji z trajektorii i z symulatora
-        target_pos = circle_trajectory.generate_circle_waypoints(t)
-        current_pos = data.site(ee_body_name).xpos
+def zmq_server_thread():
+    """Wątek serwera ZeroMQ odbierający polecenia ruchu w schemacie REP."""
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind(ZMQ_ADDRESS)
+    print(f"[MuJoCo 0MQ Server] Nasłuchiwanie na {ZMQ_ADDRESS}...")
 
-        # Obliczenie wymaganych prędkości przegubów przez zewnętrzny moduł
-        dq = ik_solver.compute_joint_velocities(
-            target_pos=target_pos,
-            current_pos=current_pos,
-            q_current=data.qpos[:6],
-            q_home=q_home,
-            kp_task=5.0,
-            kp_null=1.0,
-            max_dq=1.5,
-        )
+    while True:
+        try:
+            payload = socket.recv_json()
+            joint_idx = payload.get("joint_index")
+            val = payload.get("angle_value")
+            unit = payload.get("unit", "degrees")
 
-        # Integracja celu i wysłanie do sterownika
-        q_target = q_target + dq * model.opt.timestep
-        data.ctrl[:6] = q_target
+            if joint_idx is not None and 1 <= joint_idx <= 6:
+                # Przeliczenie stopni na radiany dla MuJoCo
+                angle_rad = np.radians(val) if unit == "degrees" else float(val)
+                
+                with q_lock:
+                    q_target[joint_idx - 1] = angle_rad
 
-        # Krok fizyki
-        mujoco.mj_step(model, data)
-        viewer.sync()
-        time.sleep(model.opt.timestep)
+                msg = f"Przegub {joint_idx} ustawiony na {val} {unit} ({angle_rad:.3f} rad)."
+                socket.send_json({"status": "ok", "message": msg})
+            else:
+                socket.send_json({"status": "error", "message": f"Nieprawidłowy numer przegubu: {joint_idx}"})
+
+        except Exception as e:
+            print(f"[!] Błąd serwera ZMQ: {e}")
+
+
+def main():
+    # Uruchomienie odbiornika ZeroMQ w tle
+    server_thread = threading.Thread(target=zmq_server_thread, daemon=True)
+    server_thread.start()
+
+    # Pętla fizyki i wizualizacji MuJoCo
+    with mujoco.viewer.launch_passive(model, data) as viewer:
+        while viewer.is_running():
+            with q_lock:
+                data.ctrl[:6] = q_target
+
+            mujoco.mj_step(model, data)
+            viewer.sync()
+            time.sleep(model.opt.timestep)
+
+
+if __name__ == "__main__":
+    main()
