@@ -1,58 +1,128 @@
 [
   {
     "role": "user",
-    "content": "lubie jabłka"
+    "content": "hej, ja lubie jabłka"
   },
   {
     "role": "assistant",
-    "content": "Zgodnie z Twoją preferencją."
+    "content": "To nie jest polecenie dotyczące ustawiania przegubów robota."
   },
   {
     "role": "user",
-    "content": "nie lubie kukurdzy"
+    "content": "nu dobra poruszaj przegubem 3 najpirtw na 90 stopni a póznij do tyłu"
   },
   {
     "role": "assistant",
-    "content": "Zgodne z Twoją preferencją."
+    "content": "Nie rozumiem polecenia. Proszę o precyzyjne wskazanie numeru przegubu i wartości kąta w stopniach lub radianach."
   },
   {
     "role": "user",
-    "content": "masz 3 klocki, zilony niebieski czerwony"
+    "content": "poruszaj 3 przegubem na 90 stopni, a pózniej wróc go do pozycji z której zaczeliśmy"
   },
   {
     "role": "assistant",
-    "content": "Na stole znajdują się: zielony klocek, niebieski klocek i czerwony klocek."
+    "content": "",
+    "thinking": "The user is asking me to move joint 3 to 90 degrees, and then return it to its original position. This is a clear instruction about setting a joint angle.\n\nLet me break this down:\n1. Set joint 3 to 90 degrees\n2. Then return it to the starting position (which would be 0 degrees or whatever it was before)\n\nI need to use the set_joint_angle function twice - first to set it to 90 degrees, then to reset it back.\n\nThe user said \"3 przegubem\" which means joint 3, and \"90 stopni\" which means 90 degrees.\n\nLet me make the function calls in Polish as requested.",
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_angle",
+          "arguments": {
+            "joint_index": 3,
+            "angle_value": 90,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
   },
   {
     "role": "user",
-    "content": "co lubie?"
+    "content": "co ja lubie"
   },
   {
     "role": "assistant",
-    "content": "Lubisz jabłka."
+    "content": "Nie wiem, co Ty lubisz. Jako sterownik robota nie mam dostępu do Twoich preferencji."
   },
   {
     "role": "user",
-    "content": "co nie lubie"
+    "content": "jaki ostatni ruch robiłeś"
   },
   {
     "role": "assistant",
-    "content": "Nie lubisz kukurydzy."
+    "content": "Ostatni ruch: ustawienie przegubu 3 na 90 stopni."
   },
   {
     "role": "user",
-    "content": "ile masz klocków"
+    "content": "co ja lubie"
   },
   {
     "role": "assistant",
-    "content": "Mam 3 klocki."
+    "content": "Nie wiem, co Ty lubisz. Jako sterownik robota nie mam dostępu do Twoich preferencji."
   },
   {
     "role": "user",
-    "content": "jakich kolorów"
+    "content": "zrób ruch środkowym przegubem o 0.5"
   },
   {
     "role": "assistant",
-    "content": "Klocki są czerwone, niebieskie i zielone."
+    "content": "",
+    "thinking": "Użytkownik prosi o wykonanie ruchu środkowym przegubem o 0.5 stopni (zakładam, że nie podano jednostki, więc zakładam stopnie). Środkowy przegub to przegub 3 w manipulatorze UR5e (przeguby są numerowane od 1 do 6, gdzie 1 to podstawowe, 2 to nadgarstek, 3 to przedramię, 4 to nadgarstek, 5 to nadgarstek, 6 to nadgarstek).\n\nZgodnie z zasadami:\n- Środkowy przegub = przegub 3\n- Nie podano jednostki, ale wartość 0.5 jest mała, więc zakładam stopnie\n\nMuszę wywołać funkcję set_joint_angle dla przegubu 3 o wartości 0.5 w stopniach.",
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_angle",
+          "arguments": {
+            "joint_index": 3,
+            "angle_value": 0.5,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "co ja lubię"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie wiem, co Ty lubisz. Jako sterownik robota nie mam dostępu do Twoich preferencji."
+  },
+  {
+    "role": "user",
+    "content": "ale musisz pamiętać fakty"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie mam dostępu do Twoich preferencji ani historii osobistych. Jako sterownik robota nie przechowuję informacji o Tobie poza tym, co zostało wyrażone w trakcie naszej rozmowy."
+  },
+  {
+    "role": "user",
+    "content": "i chcesz powiedzieć że nie ma tego w historii"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie mam możliwości zapamiętywania Twoich preferencji ani faktów o Tobie poza tym, co zostało wyrażone w trakcie tej sesji. Jako sterownik robota UR5e nie przechowuję danych osobowych ani historii użytkownika."
+  },
+  {
+    "role": "user",
+    "content": "masz 3 klocki czerwony zielony , niebiesli"
+  },
+  {
+    "role": "assistant",
+    "content": "Masz 3 klocki: czerwony, zielony i niebieski."
+  },
+  {
+    "role": "user",
+    "content": "ile masz"
+  },
+  {
+    "role": "assistant",
+    "content": "Mam 3 klocki: czerwony, zielony i niebieski."
   }
 ]

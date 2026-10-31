@@ -3,43 +3,49 @@ import os
 import sys
 from ollama import Client
 
-# =====================================================================
-# KONFIGURACJA I PARAMETRY RETENCJI
-# =====================================================================
 MODEL_NAME = "qwen3.5:4b"
 OLLAMA_HOST = "http://172.22.144.1:11434"
 HISTORY_FILE = "chat_history.json"
+MAX_CONTEXT_MESSAGES = 10
 
-# RETENCJA KONTEKSTU:
-# Ile ostatnich wypowiedzi model pamięta w bieżącej rozmowie.
-# Dla małych modeli (4B) 4-6 to idealny kompromis (nie gubi wątku i nie miesza tematów).
-MAX_CONTEXT_MESSAGES = 6
+BASE_SYSTEM_INSTRUCTION = """Jesteś inteligentnym asystentem oraz precezyjnym sterownikiem manipulatora UR5e (6 przegubów).
 
-# STAN ŚWIATA (Pamięć twarda / Fakty):
-# To są szufladki z danymi. Model NIE traktuje ich jak luźnej pogawędki.
-WORLD_STATE = {
-    "preferencje_uzytkownika": [
-        "Lubi jabłka",
-        "Nienawidzi kukurydzy"
-    ],
-    "obiekty_fizyczne": [
-        "czerwony klocek",
-        "niebieski klocek",
-        "zielony klocek"
-    ],
-    "stan_manipulatora": "gotowy, chwytak pusty"
-}
-
-# SYSTEM PROMPT:
-# Twarde reguły logiczne eliminujące metafory i mieszanie tematów
-BASE_SYSTEM_INSTRUCTION = """Jesteś precyzyjnym asystentem sterującym i analitycznym.
-
-ZASADY POSTĘPOWANIA:
-1. Odpowiadaj KRÓTKO, PRECYZYJNIE i DOSŁOWNIE.
-2. Odpowiadaj WYŁĄCZNIE w poprawnym języku polskim. Nigdy nie używaj znaków chińskich ani obcych słów.
-3. KATEGORYCZNY ZAKAZ tworzenia metafor i łączenia niepowiązanych kategorii (np. klocki to NIE jedzenie, kolory klocków nie mają nic wspólnego z warzywami).
-4. Pytany o stan otoczenia, klocki lub preferencje – czerp wiedzę WYŁĄCZNIE z sekcji AKTUALNY STAN ŚWIATA.
+ZASADY:
+1. Przetwarzaj polecenia obrotu przegubów na wywołanie funkcji `set_joint_angle`.
+2. Mapuj nazwy przegubów na numery 1-6 (np. "przedostatni" -> 5, "pierwszy" -> 1, "nadgarstek" -> 6).
+3. Rozpoznawaj jednostki (stopnie lub radiany). Jeśli użytkownik nie poda jednostki, zdeceduj w zależności od wartości kąta.
+4. Pamiętaj fakty, informacje o otoczeniu i tp., Odpowiadaj na nie na podstawie historii czatu.
+5. Odpowiadaj zwięźle i dosłownie w języku polskim.
 """
+
+ROBOT_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "set_joint_angle",
+            "description": "Ustawia kąt wybranego przegubu robota.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "joint_index": {
+                        "type": "integer",
+                        "description": "Numer przegubu (1-6)."
+                    },
+                    "angle_value": {
+                        "type": "number",
+                        "description": "Wartość kąta."
+                    },
+                    "unit": {
+                        "type": "string",
+                        "enum": ["degrees", "radians"],
+                        "description": "Jednostka kąta: 'degrees' lub 'radians'."
+                    }
+                },
+                "required": ["joint_index", "angle_value", "unit"]
+            }
+        }
+    }
+]
 
 
 class ChatBot:
@@ -50,7 +56,6 @@ class ChatBot:
         self.history = self.load_history()
 
     def load_history(self) -> list:
-        """Bezpieczne wczytywanie historii z JSON."""
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r", encoding="utf-8") as f:
@@ -58,112 +63,90 @@ class ChatBot:
                     if isinstance(data, list):
                         return data
             except Exception as e:
-                print(f"[!] Błąd pliku historii ({e}). Rozpoczynam z czystą pamięcią.")
+                print(f"[!] Błąd wczytywania historii: {e}")
         return []
 
     def save_history(self):
-        """Zapis historii do JSON z zabezpieczeniem formatowania."""
         try:
             with open(self.history_file, "w", encoding="utf-8") as f:
                 json.dump(self.history, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"[!] Błąd zapisu historii: {e}")
 
-    def build_system_prompt(self) -> dict:
-        """
-        Buduje dynamiczny prompt systemowy wstrzykując twarde fakty (Oddzielenie Stanu od Rozmowy).
-        """
-        facts_block = (
-            "\n### AKTUALNY STAN ŚWIATA (FAKTY TWARDE):\n"
-            f"- Preferencje użytkownika: {'; '.join(WORLD_STATE['preferencje_uzytkownika'])}\n"
-            f"- Fizyczne obiekty na stole: {', '.join(WORLD_STATE['obiekty_fizyczne'])}\n"
-            f"- Stan robota: {WORLD_STATE['stan_manipulatora']}\n"
-            "###\n"
-        )
-        return {
-            "role": "system",
-            "content": BASE_SYSTEM_INSTRUCTION + facts_block
-        }
-
     def get_messages_for_model(self) -> list:
-        """
-        Mechanizm retencji Sliding Window:
-        Prompt systemowy ze stanem świata + maksymalnie N ostatnich wiadomości.
-        """
         recent_history = self.history[-MAX_CONTEXT_MESSAGES:] if len(self.history) > MAX_CONTEXT_MESSAGES else self.history
-        return [self.build_system_prompt()] + recent_history
+        return [{"role": "system", "content": BASE_SYSTEM_INSTRUCTION}] + recent_history
 
     def ask(self, user_input: str):
-        # 1. Dodajemy bieżące zapytanie użytkownika
         self.history.append({"role": "user", "content": user_input})
         messages_to_send = self.get_messages_for_model()
 
         try:
-            print("\nAsystent: ", end="", flush=True)
-
-            # 2. Wywołanie modelu z rygorystycznymi parametrami retencji i braku halucynacji
-            response_stream = self.client.chat(
+            response = self.client.chat(
                 model=self.model,
                 messages=messages_to_send,
-                stream=True,
-                think=False,  # Wyłącza ukryty strumień reasoning (naprawia puste odpowiedzi)
-                options={
-                    "temperature": 0.1,  # Prawie zerowa temperatura = brak fantazjowania, czysta logika
-                    "top_p": 0.9
-                }
+                tools=ROBOT_TOOLS,
+                options={"temperature": 0.0}
             )
 
-            assistant_response = ""
-            for chunk in response_stream:
-                content = chunk.get('message', {}).get('content', '')
-                if content:
-                    print(content, end="", flush=True)
-                    assistant_response += content
-
-            print("\n")
-
-            # 3. Zabezpieczenie przed zatruciem historii pustym stringiem
-            if assistant_response.strip():
-                self.history.append({"role": "assistant", "content": assistant_response})
-                self.save_history()
+            msg = response.get("message", {})
+            
+            # Konwersja obiektu `ollama.Message` na czysty dict Pythona (JSON serializable)
+            if hasattr(msg, "model_dump"):
+                msg_dict = msg.model_dump()
+            elif hasattr(msg, "__dict__"):
+                msg_dict = dict(msg)
             else:
-                print("[!] Ostrzeżenie: Odebrano pustą odpowiedź. Pamięć nie została zanieczyszczona.")
-                self.history.pop()
+                msg_dict = msg
+
+            tool_calls = msg_dict.get("tool_calls", [])
+            content = msg_dict.get("content", "")
+
+            if tool_calls:
+                for call in tool_calls:
+                    fn_name = call.get("function", {}).get("name")
+                    args = call.get("function", {}).get("arguments", {})
+                    
+                    print(f"\n[AKCJA ROBOTA] -> Wykonaj: {fn_name}(przegub={args.get('joint_index')}, kąt={args.get('angle_value')}, jednostka='{args.get('unit')}')\n")
+
+                # Zapisujemy do historii przetworzony słownik `msg_dict`
+                self.history.append(msg_dict)
+                self.save_history()
+
+            elif content:
+                print(f"\nAsystent: {content}\n")
+                self.history.append({"role": "assistant", "content": content})
+                self.save_history()
 
         except Exception as e:
-            print(f"\n[!] Błąd komunikacji z Ollamą: {e}")
+            print(f"\n[!] Błąd komunikacji z Ollama: {e}")
             if self.history and self.history[-1]["role"] == "user":
                 self.history.pop()
 
 
 def main():
     bot = ChatBot(host=OLLAMA_HOST, model=MODEL_NAME, history_file=HISTORY_FILE)
-    
-    print(f"=== ChatBot ({MODEL_NAME}) zainicjalizowany ===")
+    print(f"=== Sterownik przegubów zainicjalizowany ({MODEL_NAME}) ===")
     print(f"Załadowano wiadomości z historii: {len(bot.history)}")
+
     print("Dostępne komendy: 'exit' (wyjście), 'clear' (wyczyszczenie pamięci czatu)\n")
 
     while True:
         try:
             user_input = input("Ty: ").strip()
-            
             if not user_input:
                 continue
-
             if user_input.lower() in ["exit", "quit"]:
-                print("Zamykanie bota.")
                 break
-
             if user_input.lower() == "clear":
                 bot.history = []
                 bot.save_history()
-                print("[i] Pamięć czatu została całkowicie wyczyszczona.\n")
+                print("[i] Pamięć czatu wyczyszczona.")
                 continue
 
             bot.ask(user_input)
 
         except KeyboardInterrupt:
-            print("\nZakończono działanie programu.")
             sys.exit(0)
 
 
