@@ -10,7 +10,8 @@ HISTORY_FILE = "chat_history.json"
 MAX_CONTEXT_MESSAGES = 20
 
 # Adres połączenia ZeroMQ z symulacją MuJoCo
-ZMQ_ADDRESS = "tcp://172.22.144.1:5555"  # Adres IPC do komunikacji z MuJoCo
+#ZMQ_ADDRESS = "tcp://172.22.144.1:5555"  # Adres IPC do komunikacji z MuJoCo
+ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"  # Adres IPC do komunikacji z MuJoCo
 
 # Inicjalizacja klienta ZeroMQ (REQ)
 zmq_context = zmq.Context()
