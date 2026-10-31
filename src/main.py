@@ -15,7 +15,8 @@ ROBOT_PATH = PROJECT_DIR / "models" / "universal_robots_ur5e" / "scene.xml"
 GRIPPER_PATH = PROJECT_DIR / "models" / "robotiq_2f85" / "2f85.xml"
 
 # Adres komunikacji IPC przez ZeroMQ
-ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
+#ZMQ_ADDRESS = "tcp://*:5555"
+ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"  # Adres IPC do komunikacji z MuJoCo
 
 # 1. Tworzenie modelu i danych robota
 model, data = gripper_connection.create_robot(ROBOT_PATH, GRIPPER_PATH)
