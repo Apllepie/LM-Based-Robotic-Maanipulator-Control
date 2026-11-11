@@ -9,14 +9,21 @@ from prompts import BASE_SYSTEM_INSTRUCTION, ROBOT_TOOLS
 
 MODEL_NAME = "qwen3.5:4b"
 OLLAMA_HOST = "http://172.22.144.1:11434"
+#Ollama_HOST = "http://localhost:11434"
 HISTORY_FILE = "chat_history.json"
+TEMPERATURE = 0.0
+MAX_TOKENS = 8192
 MAX_CONTEXT_MESSAGES = 20
 
-ZMQ_ADDRESS = "tcp://127.0.0.1:5555"
-# ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
+#ZMQ_ADDRESS = "tcp://127.0.0.1:5555"
+ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
 
 zmq_context = zmq.Context()
 
+
+def count_tokens(messages):
+    text = json.dumps(messages)
+    return len(text) // 4 
 
 def sanitize_surrogates(data):
     if isinstance(data, str):
@@ -76,8 +83,12 @@ class ChatBot:
     def get_messages_for_model(self) -> list:
         recent_history = self.history[-MAX_CONTEXT_MESSAGES:] if len(self.history) > MAX_CONTEXT_MESSAGES else self.history
         messages = [{"role": "system", "content": BASE_SYSTEM_INSTRUCTION}] + recent_history
+        
+        # Считаем токены уже после того, как сформировали messages
+        tokens = count_tokens(messages)
+        print(f"DEBUG: Bieżący kontekst ~{tokens} tokenów.")
+        
         return sanitize_surrogates(messages)
-
     def ask(self, user_input: str):
         clean_input = sanitize_surrogates(user_input)
         self.history.append({"role": "user", "content": clean_input})
@@ -89,7 +100,7 @@ class ChatBot:
                 messages=messages_to_send,
                 tools=ROBOT_TOOLS,
                 think=False,
-                options={"temperature": 0.0}
+                options={"temperature": TEMPERATURE, "max_tokens": MAX_TOKENS }
             )
 
             msg = response.get("message", {})
@@ -107,6 +118,7 @@ class ChatBot:
 
             if tool_calls:
                 self.history.append(msg_dict)
+                summary_responses = []
 
                 for call in tool_calls:
                     fn_name = call.get("function", {}).get("name")
@@ -134,15 +146,27 @@ class ChatBot:
                             "action": args.get("action"),
                             "value": args.get("value", 0.0)
                         }
+                    elif fn_name == "move_effector_by":
+                        payload = {
+                            "type": "effector", # nowy typ narzędzia dla ruchu przestrzennego
+                            "dx": args.get("dx"),
+                            "dy": args.get("dy"),
+                            "dz": args.get("dz")
+                        }
                     else:
                         continue
 
                     res_msg = send_to_mujoco_simulation(payload)
                     print(f"\n[AKCJA ROBOTA] -> {res_msg}\n")
                     self.history.append({"role": "tool", "content": res_msg})
-
+                    # Jeśli chcesz, aby bbot widział wynik każdej komendy:
+                    # self.history.append({"role": "tool", "content": res_msg})
+                final_summary = "Wynik operacji: " + " | ".join(summary_responses)
+                
+                # zamiast całego podsumowania, możemy dodać tylko krótkie info o wykonaniu akcji
+                self.history.append({"role": "assistant", "content": final_summary})
+                
                 self.save_history()
-
             elif content:
                 print(f"\nAsystent: {content}\n")
                 self.history.append({"role": "assistant", "content": content})

@@ -1,14 +1,17 @@
-BASE_SYSTEM_INSTRUCTION = """Jesteś inteligentnym asystentem oraz precyzyjnym sterownikiem manipulatora UR5e z chwytakiem Robotiq 2F-85.
+BASE_SYSTEM_INSTRUCTION = """Jesteś precyzyjnym sterownikiem manipulatora UR5e z chwytakiem Robotiq 2F-85 oraz inteligentnym asystentem.
 
 ZASADY POSTĘPOWANIA:
 1. Rozpoznawaj intencję użytkownika i wybieraj właściwe narzędzie:
-   - `rotate_joint_by`: zmiana/obrót obecnej pozycji przegubu (1-6) O podaną wartość (ruch względny).
-   - `set_joint_to`: ustawienie konkretnego kąta docelowego przegubu (1-6) NA podaną wartość (ruch bezwzględny).
-   - `control_gripper`: sterowanie chwytakiem (otwieranie, zamykanie lub ustawianie procentowe 0-100%).
-2. Mapuj nazwy przegubów na numery 1-6 (1 = podstawa/base, 2 = ramię, 3 = łokieć/środkowy, 5 = przedostatni, 6 = nadgarstek).
+    -`rotate_joint_by(joint_index, delta_angle, unit)`: ruch relatywny pojedynczego przegubu. -`set_joint_to(joint_index, target_angle, unit)`: ruch absolutny pojedynczego przegubu.
+    -`control_gripper(action, value)`: sterowanie chwytakiem (open/close/set).
+    -`move_effector_by(dx, dy, dz)`: przesunięcie końcówki (TCP) w przestrzeni 3D z zachowaniem orientacji 
+2. Mapuj nazwy przegubów na numery 1-6 (1 = podstawa/base, 2 = ramię, 3 = łokieć/środkowy,4 = przedramie, 5 = przedostatni, 6 = nadgarstek/chwytak/ostatni).
 3. Domyślnie dla przegubów przyjmuj jednostkę stopnie ("degrees").
 4. Domyślnie dla chwytaka: "otwórz" = open, "zamknij" = close, "uchyl/chwyć na X%" = set z wartością 0-100%.
-5. Odpowiadaj zwięźle w języku polskim.
+5. STEROWANIE PRZESTRZENNE: Gdy użytkownik prosi o ruch "w górę/dół/lewo/prawo", UŻYWAJ WYŁĄCZNIE `move_effector_by`. Nie próbuj sterować pojedynczymi przegubami, aby uzyskać ruch liniowy – to psuje orientację chwytaka.
+6. jeżele polecenie nie jest jasne dopytaj o szczegóły, nie zgaduj. Nie wykonuj żadnych ruchów, jeśli nie masz pewności co do intencji użytkownika.
+7. jeżeli polecenie jest niebezpieczne lub niemożliwe do wykonania, poinformuj o tym użytkownika i poproś o zmianę polecenia.
+8. Odpowiadaj zwięźle w języku polskim.
 """
 
 ROBOT_TOOLS = [
@@ -65,5 +68,22 @@ ROBOT_TOOLS = [
                 "required": ["action"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "move_effector_by",
+            "description": "Przesuwa końcówkę robota o wektor [dx, dy, dz] w metrach.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dx": {"type": "number"},
+                    "dy": {"type": "number"},
+                    "dz": {"type": "number"}
+                },
+                "required": ["dx", "dy", "dz"]
+            }
+        }
     }
+    
 ]

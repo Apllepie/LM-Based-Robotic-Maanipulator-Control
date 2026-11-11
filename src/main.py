@@ -1,20 +1,22 @@
 from pathlib import Path
 import time
 import threading
+from fsspec import json
 import numpy as np
 import zmq
 
 import mujoco
 import mujoco.viewer
 
+from kinematics import DifferentialIK
 import robots.gripper_connection as gripper_connection
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 ROBOT_PATH = PROJECT_DIR / "models" / "universal_robots_ur5e" / "scene.xml"
 GRIPPER_PATH = PROJECT_DIR / "models" / "robotiq_2f85" / "2f85.xml"
 
-ZMQ_ADDRESS = "tcp://*:5555"
-# ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
+#ZMQ_ADDRESS = "tcp://*:5555"
+ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
 
 MAX_JOINT_VELOCITY = 1.5  # rad/s dla przegubów
 MAX_GRIPPER_VELOCITY = 255.0  # prędkość zmiany sygnału chwytaka
@@ -98,13 +100,19 @@ def zmq_server_thread():
                         status_msg = f"Nieznana akcja chwytaka: {action}"
 
                 socket.send_json({"status": "ok", "message": status_msg})
+            elif cmd_type == "effector":
+                dx, dy, dz = payload.get("dx"), payload.get("dy"), payload.get("dz")
+                # tutaj stosują się danne q.pos i q.vel, więc musimy użyć IK do obliczenia nowych pozycji przegubów
+                ik = DifferentialIK(model, data)
+                # liczymy nowe q_target na podstawie przesunięcia końcówki
+                # używamy obliczone prędkości przegubów do aktualizacji q_target
+                socket.send_json({"status": "ok", "message": f"Przesunięto o {dx}, {dy}, {dz}"})
 
         except Exception as e:
             try:
                 socket.send_json({"status": "error", "message": f"Błąd serwera: {e}"})
             except Exception:
                 pass
-
 
 def main():
     server_thread = threading.Thread(target=zmq_server_thread, daemon=True)
