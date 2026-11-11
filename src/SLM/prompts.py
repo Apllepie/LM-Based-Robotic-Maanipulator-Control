@@ -6,12 +6,14 @@ ZASADY POSTĘPOWANIA:
     -`control_gripper(action, value)`: sterowanie chwytakiem (open/close/set).
     -`move_effector_by(dx, dy, dz)`: przesunięcie końcówki (TCP) w przestrzeni 3D z zachowaniem orientacji 
 2. Mapuj nazwy przegubów na numery 1-6 (1 = podstawa/base, 2 = ramię, 3 = łokieć/środkowy,4 = przedramie, 5 = przedostatni, 6 = nadgarstek/chwytak/ostatni).
-3. Domyślnie dla przegubów przyjmuj jednostkę stopnie ("degrees").
-4. Domyślnie dla chwytaka: "otwórz" = open, "zamknij" = close, "uchyl/chwyć na X%" = set z wartością 0-100%.
-5. STEROWANIE PRZESTRZENNE: Gdy użytkownik prosi o ruch "w górę/dół/lewo/prawo", UŻYWAJ WYŁĄCZNIE `move_effector_by`. Nie próbuj sterować pojedynczymi przegubami, aby uzyskać ruch liniowy – to psuje orientację chwytaka.
-6. jeżele polecenie nie jest jasne dopytaj o szczegóły, nie zgaduj. Nie wykonuj żadnych ruchów, jeśli nie masz pewności co do intencji użytkownika.
-7. jeżeli polecenie jest niebezpieczne lub niemożliwe do wykonania, poinformuj o tym użytkownika i poproś o zmianę polecenia.
-8. Odpowiadaj zwięźle w języku polskim.
+3. Pamiętaj, że maksymalny zasięg roboczy robota UR5e wynosi 0.85 metra od podstawy.
+3. Jeśli użytkownik podaje wartości przekraczające zasięg (np. 3 metry), odmów wykonania akcji lub poinformuj go o ograniczeniu zasięgu.
+4. Domyślnie dla przegubów przyjmuj jednostkę stopnie ("degrees").
+5. Domyślnie dla chwytaka: "otwórz" = open, "zamknij" = close, "uchyl/chwyć na X%" = set z wartością 0-100%.
+6. STEROWANIE PRZESTRZENNE: Gdy użytkownik prosi o ruch "w górę/dół/lewo/prawo", UŻYWAJ WYŁĄCZNIE `move_effector_by`. Nie próbuj sterować pojedynczymi przegubami, aby uzyskać ruch liniowy – to psuje orientację chwytaka.
+7. jeżele polecenie nie jest jasne dopytaj o szczegóły, nie zgaduj. Nie wykonuj żadnych ruchów, jeśli nie masz pewności co do intencji użytkownika.
+8. jeżeli polecenie jest niebezpieczne lub niemożliwe do wykonania, poinformuj o tym użytkownika i poproś o zmianę polecenia.
+9. Odpowiadaj zwięźle w języku polskim.
 """
 
 ROBOT_TOOLS = [

@@ -1,15 +1,7 @@
 [
   {
     "role": "user",
-    "content": "zapamiętaj to położenie jako pozycje startową"
-  },
-  {
-    "role": "assistant",
-    "content": "Jako sterownik manipulatora nie mam możliwości zapamiętania stanu robota poza tym, co widzę w bieżącym kontekście rozmowy. Każda nowa sesja zaczyna się od \"czystego\" stanu.\n\nAby uzyskać pozycję startową, proszę podaj mi aktualne kąty wszystkich przegubów (1-6) lub opisz, jak robot ma się znaleźć (np. \"ramię w górę, chwytak skierowany do przodu\")."
-  },
-  {
-    "role": "user",
-    "content": "przesuń chwytak 10 cm do góry"
+    "content": "przesuń effektor w góre"
   },
   {
     "role": "assistant",
@@ -32,7 +24,7 @@
   },
   {
     "role": "tool",
-    "content": "Przesunięto o 0, 0, 0.1"
+    "content": "Przesunięto efektor o [0.0, 0.0, 0.1]"
   },
   {
     "role": "assistant",
@@ -40,7 +32,7 @@
   },
   {
     "role": "user",
-    "content": "przesuń chwytak 10 cm w dół"
+    "content": "obbróć 2 przegób na -80 a 3 na 100"
   },
   {
     "role": "assistant",
@@ -51,11 +43,21 @@
     "tool_calls": [
       {
         "function": {
-          "name": "move_effector_by",
+          "name": "rotate_joint_by",
           "arguments": {
-            "dx": 0,
-            "dy": 0,
-            "dz": -0.1
+            "joint_index": 2,
+            "delta_angle": -80,
+            "unit": "degrees"
+          }
+        }
+      },
+      {
+        "function": {
+          "name": "rotate_joint_by",
+          "arguments": {
+            "joint_index": 3,
+            "delta_angle": 100,
+            "unit": "degrees"
           }
         }
       }
@@ -63,7 +65,11 @@
   },
   {
     "role": "tool",
-    "content": "Przesunięto o 0, 0, -0.1"
+    "content": "Przegub 2 zmieniony względnie o -80 degrees (Cel: -170.0° / -2.967 rad)."
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 3 zmieniony względnie o 100 degrees (Cel: 189.9° / 3.314 rad)."
   },
   {
     "role": "assistant",
@@ -71,7 +77,300 @@
   },
   {
     "role": "user",
-    "content": "przesun chwytak w prawo o 30 cm"
+    "content": "obróć 2 przegób na 20 stopni"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 2,
+            "target_angle": 20,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 2 zmieniony bezwzględnie na 20 degrees (Cel: 20.0° / 0.349 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 2 przegub na 80 stopni"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 2,
+            "target_angle": 80,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 2 zmieniony bezwzględnie na 80 degrees (Cel: 80.0° / 1.396 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ten sam przegub na - 80"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 2,
+            "target_angle": -80,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 2 zmieniony bezwzględnie na -80 degrees (Cel: -80.0° / -1.396 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 2 przegub na -120"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 2,
+            "target_angle": -120,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 2 zmieniony bezwzględnie na -120 degrees (Cel: -120.0° / -2.094 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 3 przegub na 80 stopni"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 3,
+            "target_angle": 80,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 3 zmieniony bezwzględnie na 80 degrees (Cel: 80.0° / 1.396 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw drugi na -150 a 3 na 100"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 2,
+            "target_angle": -150,
+            "unit": "degrees"
+          }
+        }
+      },
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 3,
+            "target_angle": 100,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 2 zmieniony bezwzględnie na -150 degrees (Cel: -150.0° / -2.618 rad)."
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 3 zmieniony bezwzględnie na 100 degrees (Cel: 100.0° / 1.745 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 4 przegub na 180"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 4,
+            "target_angle": 180,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 4 zmieniony bezwzględnie na 180 degrees (Cel: 180.0° / 3.142 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 4 przegub na 90"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 4,
+            "target_angle": 90,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 4 zmieniony bezwzględnie na 90 degrees (Cel: 90.0° / 1.571 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "ustaw 4 przegub na 0"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "set_joint_to",
+          "arguments": {
+            "joint_index": 4,
+            "target_angle": 0,
+            "unit": "degrees"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przegub 4 zmieniony bezwzględnie na 0 degrees (Cel: 0.0° / 0.000 rad)."
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń chwytak do przodu 30 cm"
   },
   {
     "role": "assistant",
@@ -94,7 +393,7 @@
   },
   {
     "role": "tool",
-    "content": "Przesunięto o 0.3, 0, 0"
+    "content": "Przesunięto efektor o [0.3, 0.0, 0.0]"
   },
   {
     "role": "assistant",
@@ -102,7 +401,100 @@
   },
   {
     "role": "user",
-    "content": "przesuń chwytak w dół o 20 cm"
+    "content": "przesuń chwytak do przodu na 3 metry"
+  },
+  {
+    "role": "assistant",
+    "content": "Aby przesunąć chwytak o 3 metry do przodu, wykonam ruch w kierunku dodatnim osi X (zakładając standardową konfigurację, gdzie \"do przodu\" odpowiada dodatniemu przesunięciu wzdłuż osi robota).",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 3,
+            "dy": 0,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [3.0, 0.0, 0.0]"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń chwytak w dół 10 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": -0.1,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, -0.1, 0.0]"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń effektor w prawo 30 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0.3,
+            "dy": 0,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.3, 0.0, 0.0]"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń effektor do góry o 10 cm"
   },
   {
     "role": "assistant",
@@ -117,7 +509,7 @@
           "arguments": {
             "dx": 0,
             "dy": 0,
-            "dz": -0.2
+            "dz": 0.1
           }
         }
       }
@@ -125,7 +517,318 @@
   },
   {
     "role": "tool",
-    "content": "Przesunięto o 0, 0, -0.2"
+    "content": "Przesunięto efektor o [0.0, 0.0, 0.1] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń effektor w dół o 10 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": 0,
+            "dz": -0.1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, 0.0, -0.1] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesun efektor w prawo o 20 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0.2,
+            "dy": 0,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.2, 0.0, 0.0] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń chwytak do przodu o 10 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "Proszę o sprostowanie: ruch wzdłuż osi Z (do przodu/wyżej) wykonuje się sterowaniem końcówką robota (`move_effector_by`), a nie samym chwytakiem. Chwytak można jedynie otwierać, zamykać lub ustawiać na konkretną wartość procentową.\n\nCzy chciałbyś przesunąć **końcówkę robota** (TCP) do przodu o 10 cm?"
+  },
+  {
+    "role": "user",
+    "content": "tak"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": 0,
+            "dz": 0.1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, 0.0, 0.1] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "jak masz skirowane osi"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie mam dostępu do informacji o skrawaniu osi robota w tym interfejsie. Funkcja `move_effector_by` przesuwają końcówkę robota (TCP) zgodnie z wektorem [dx, dy, dz] w układzie współrzędnych roboczej robota UR5e (zazwyczaj: X - lewo/prawo, Y - przód/tłum, Z - w górę/dół).\n\nCzy chcesz wykonać jakiś konkretny ruch?"
+  },
+  {
+    "role": "user",
+    "content": "czyli tak do przodu to znaczy w osi x ujemny kierunek do tyłu dodatni. w prawo to w osi y ujemny kierunek w lewo to dodatni. góra dół to z to rozumiesz"
+  },
+  {
+    "role": "assistant",
+    "content": "Tak, masz rację w kontekście standardowego układu współrzędnych robota UR5e (współrzędne robocze):\n\n*   **Oś Z:** Domyślnie skierowana do góry. Ruch \"do przodu\" (w stronę obserwatora) często odpowiada ruchowi w ujemnym kierunku Z (zależnie od konfiguracji), a \"do tyłu\" – dodatniemu.\n*   **Oś X:** Często odpowiada ruchowi lewo-prawo (lub odwrotnie, zależnie od orientacji robota).\n*   **Oś Y:** Odpowiada ruchowi przód-tłum.\n\nWarto jednak pamiętać, że kierunki \"przód\", \"tył\", \"lewo\", \"prawo\" i \"góra\", \"dół\" są względem Twojej perspektywy lub ustawienia robota. Funkcja `move_effector_by` przyjmuje wartości [dx, dy, dz], gdzie:\n*   **dz > 0** zazwyczaj oznacza ruch w górę (zgodnie z osią Z).\n*   **dz < 0** oznacza ruch w dół.\n\nJeśli chcesz przesunąć robota \"do przodu\" (w stronę Ciebie), a Twój robot jest ustawiony tak, że jego oś Z wskazuje do góry, to ruch ten wymagałby ujemnej wartości dz (np. -0.1 m). Jeśli jednak masz na myśli ruch wzdłuż osi X lub Y, podaj mi konkretny wektor [dx, dy, dz] i wykonam go dla Ciebie."
+  },
+  {
+    "role": "user",
+    "content": "przesuń manipulator w prawo"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0.1,
+            "dy": 0,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.1, 0.0, 0.0] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń manipulator w osi x ujemnie o 20 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": -0.2,
+            "dy": 0,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [-0.2, 0.0, 0.0] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń manipulator w dół o 10 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": 0,
+            "dz": -0.1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, 0.0, -0.1] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń dodatnio w osi y o 14.6 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": 0.146,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, 0.146, 0.0] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń w ujemnej osi y o 30 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": -0.3,
+            "dz": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, -0.3, 0.0] m"
+  },
+  {
+    "role": "assistant",
+    "content": "Wynik operacji: "
+  },
+  {
+    "role": "user",
+    "content": "przesuń w osi x ujemnie o 2 metry"
+  },
+  {
+    "role": "assistant",
+    "content": "Nie mogę przesunąć robota o 2 metry w osi X, ponieważ maksymalny zasięg roboczy manipulatora UR5e wynosi około 0.85 metra od podstawy. Proszę podać wartość mniejszą niż 0.85 m."
+  },
+  {
+    "role": "user",
+    "content": "przesun w góre o 30 cm"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "thinking": null,
+    "images": null,
+    "tool_name": null,
+    "tool_calls": [
+      {
+        "function": {
+          "name": "move_effector_by",
+          "arguments": {
+            "dx": 0,
+            "dy": 0,
+            "dz": 0.3
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "content": "Przesunięto efektor o [0.0, 0.0, 0.3] m"
   },
   {
     "role": "assistant",

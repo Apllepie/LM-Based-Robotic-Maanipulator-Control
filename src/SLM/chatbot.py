@@ -15,8 +15,8 @@ TEMPERATURE = 0.0
 MAX_TOKENS = 8192
 MAX_CONTEXT_MESSAGES = 20
 
-#ZMQ_ADDRESS = "tcp://127.0.0.1:5555"
-ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
+ZMQ_ADDRESS = "tcp://127.0.0.1:5555"
+#ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
 
 zmq_context = zmq.Context()
 

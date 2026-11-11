@@ -1,7 +1,6 @@
 from pathlib import Path
 import time
 import threading
-from fsspec import json
 import numpy as np
 import zmq
 
@@ -15,15 +14,13 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 ROBOT_PATH = PROJECT_DIR / "models" / "universal_robots_ur5e" / "scene.xml"
 GRIPPER_PATH = PROJECT_DIR / "models" / "robotiq_2f85" / "2f85.xml"
 
-#ZMQ_ADDRESS = "tcp://*:5555"
-ZMQ_ADDRESS = "ipc:///tmp/mujoco.ipc"
+ZMQ_ADDRESS = "tcp://*:5555"
 
 MAX_JOINT_VELOCITY = 1.5  # rad/s dla przegubów
-MAX_GRIPPER_VELOCITY = 255.0  # prędkość zmiany sygnału chwytaka
+MAX_GRIPPER_VELOCITY = 255.0
 
 model, data = gripper_connection.create_robot(ROBOT_PATH, GRIPPER_PATH)
 
-# Pobranie ID i zakresu sterowania chwytaka
 gripper_actuator_id = gripper_connection.get_gripper_actuator_id(model)
 ctrl_range = model.actuator_ctrlrange[gripper_actuator_id]
 GRIPPER_MIN_CTRL, GRIPPER_MAX_CTRL = ctrl_range[0], ctrl_range[1]
@@ -32,24 +29,21 @@ GRIPPER_MIN_CTRL, GRIPPER_MAX_CTRL = ctrl_range[0], ctrl_range[1]
 q_home = np.array([0.0, -1.57, 1.57, -1.57, -1.57, 0.0])
 data.qpos[:6] = q_home
 data.ctrl[:6] = q_home
-# Chwytak domyślnie otwarty
 data.ctrl[gripper_actuator_id] = GRIPPER_MIN_CTRL
 mujoco.mj_forward(model, data)
 
-# Cele pozycji dla przegubów i chwytaka
 q_target = q_home.copy()
 gripper_target = float(GRIPPER_MIN_CTRL)
 lock = threading.Lock()
 
 
 def zmq_server_thread():
-    """Wątek serwera ZMQ do obsługi przegubów i chwytaka."""
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind(ZMQ_ADDRESS)
     print(f"[MuJoCo 0MQ Server] Nasłuchiwanie na {ZMQ_ADDRESS}...")
 
-    global gripper_target
+    global gripper_target, q_target
 
     while True:
         try:
@@ -92,7 +86,6 @@ def zmq_server_thread():
                         gripper_target = float(GRIPPER_MAX_CTRL)
                         status_msg = "Chwytak zamknięty."
                     elif action == "set":
-                        # Mapowanie wartości 0-100% na zakrojenie sygnału sterownika
                         pct = np.clip(val, 0.0, 100.0) / 100.0
                         gripper_target = GRIPPER_MIN_CTRL + pct * (GRIPPER_MAX_CTRL - GRIPPER_MIN_CTRL)
                         status_msg = f"Ustawiono otwarcie chwytaka na {val}%."
@@ -100,19 +93,43 @@ def zmq_server_thread():
                         status_msg = f"Nieznana akcja chwytaka: {action}"
 
                 socket.send_json({"status": "ok", "message": status_msg})
+
             elif cmd_type == "effector":
-                dx, dy, dz = payload.get("dx"), payload.get("dy"), payload.get("dz")
-                # tutaj stosują się danne q.pos i q.vel, więc musimy użyć IK do obliczenia nowych pozycji przegubów
+                dx = float(payload.get("dx", 0))
+                dy = float(payload.get("dy", 0))
+                dz = float(payload.get("dz", 0))
+
                 ik = DifferentialIK(model, data)
-                # liczymy nowe q_target na podstawie przesunięcia końcówki
-                # używamy obliczone prędkości przegubów do aktualizacji q_target
-                socket.send_json({"status": "ok", "message": f"Przesunięto o {dx}, {dy}, {dz}"})
+
+                with lock:
+                    mujoco.mj_forward(model, data)
+                    current_pos = data.site_xpos[ik.site_id].copy()
+                    current_rot = data.site_xmat[ik.site_id].reshape(3, 3).copy()
+                    q_start = q_target.copy()
+
+                target_pos = current_pos + np.array([dx, dy, dz])
+
+                # Wyznaczenie zbieżności IK 6D z zachowaniem obecnej orientacji chwytaka
+                q_solution, success = ik.solve_ik_6d(
+                    target_pos=target_pos,
+                    target_rot=current_rot,
+                    q_init=q_start,
+                    max_steps=150
+                )
+
+                if success:
+                    with lock:
+                        q_target = q_solution.copy()
+                    socket.send_json({"status": "ok", "message": f"Przesunięto efektor o [{dx}, {dy}, {dz}] m"})
+                else:
+                    socket.send_json({"status": "error", "message": "Nie można osiągnąć docelowej pozycji (poza zasięgiem robota lub osobliwość)."})
 
         except Exception as e:
             try:
                 socket.send_json({"status": "error", "message": f"Błąd serwera: {e}"})
             except Exception:
                 pass
+
 
 def main():
     server_thread = threading.Thread(target=zmq_server_thread, daemon=True)
@@ -126,14 +143,14 @@ def main():
                 q_target_copy = q_target.copy()
                 g_target_copy = gripper_target
 
-            # 1. Płynna interpolacja dla 6 przegubów ramienia
+            # Interpolacja ruchu dla 6 przegubów
             current_arm_ctrl = data.ctrl[:6].copy()
             arm_diff = q_target_copy - current_arm_ctrl
             max_arm_step = MAX_JOINT_VELOCITY * dt
             arm_step = np.clip(arm_diff, -max_arm_step, max_arm_step)
             data.ctrl[:6] = current_arm_ctrl + arm_step
 
-            # 2. Płynna interpolacja dla chwytaka
+            # Interpolacja dla chwytaka
             current_g_ctrl = data.ctrl[gripper_actuator_id]
             g_diff = g_target_copy - current_g_ctrl
             max_g_step = MAX_GRIPPER_VELOCITY * dt
